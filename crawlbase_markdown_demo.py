@@ -48,10 +48,21 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_TIMEOUT_SECONDS,
         help=f"Request timeout in seconds. Defaults to {DEFAULT_TIMEOUT_SECONDS}",
     )
+    parser.add_argument(
+        "--md-readability",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Extract the main readable content before Markdown conversion. Defaults to true.",
+    )
     return parser
 
 
-def fetch_markdown(url: str, token: str, timeout: int) -> requests.Response:
+def fetch_markdown(
+    url: str,
+    token: str,
+    timeout: int,
+    md_readability: bool,
+) -> requests.Response:
     """Call Crawlbase with Markdown output and readability extraction enabled."""
     try:
         response = requests.get(
@@ -60,7 +71,7 @@ def fetch_markdown(url: str, token: str, timeout: int) -> requests.Response:
                 "token": token,
                 "url": url,
                 "format": "md",
-                "md_readability": "true",
+                "md_readability": str(md_readability).lower(),
             },
             timeout=timeout,
             headers={
@@ -99,13 +110,18 @@ def save_markdown(markdown: str, output_path: Path) -> None:
     output_path.write_text(markdown, encoding="utf-8")
 
 
-def print_summary(response: requests.Response, output_path: Path) -> None:
+def print_summary(
+    response: requests.Response,
+    output_path: Path,
+    md_readability: bool,
+) -> None:
     print("Markdown scrape complete")
     print(f"Resolved URL: {response.headers.get('url', 'unknown')}")
     print(f"Original status: {response.headers.get('original_status', 'unknown')}")
     print(f"Crawlbase status: {response.headers.get('pc_status', response.status_code)}")
     print(f"Content-Type: {response.headers.get('Content-Type', 'unknown')}")
     print(f"Markdown flavor: {response.headers.get('X-Markdown-Flavor', 'unknown')}")
+    print(f"Readability extraction: {str(md_readability).lower()}")
     print(f"Saved to: {output_path}")
 
 
@@ -118,9 +134,14 @@ def main() -> int:
             "Missing CRAWLBASE_TOKEN. Set it as an environment variable before running."
         )
 
-    response = fetch_markdown(url=args.url, token=token, timeout=args.timeout)
+    response = fetch_markdown(
+        url=args.url,
+        token=token,
+        timeout=args.timeout,
+        md_readability=args.md_readability,
+    )
     save_markdown(response.text, args.output)
-    print_summary(response, args.output)
+    print_summary(response, args.output, args.md_readability)
     return 0
 
 

@@ -66,6 +66,12 @@ Fetch Markdown from a specific URL:
 python crawlbase_markdown_demo.py --url "https://example.com/" --output "output/example.md"
 ```
 
+Readability extraction is enabled by default. To compare Crawlbase Markdown with and without main-content extraction, use:
+
+```powershell
+python crawlbase_markdown_demo.py --url "https://example.com/" --no-md-readability --output "output/example-full-page.md"
+```
+
 The script prints a short summary:
 
 ```text
@@ -75,6 +81,7 @@ Original status: 200
 Crawlbase status: 200
 Content-Type: text/markdown; charset=utf-8
 Markdown flavor: GitHub Flavored Markdown (GFM)
+Readability extraction: true
 Saved to: output/example.md
 ```
 
@@ -96,6 +103,8 @@ url=<target page>
 format=md
 md_readability=true
 ```
+
+The script sends `md_readability=true` by default. Passing `--no-md-readability` changes the request to `md_readability=false`.
 
 Crawlbase returns the page body as Markdown. Response headers may include useful crawl metadata such as:
 
